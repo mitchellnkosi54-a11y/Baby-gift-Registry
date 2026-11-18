@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baby Gift Registry</title>
+<meta name="description" content="Our baby gift registry: browse gifts, tap Claim so nobody buys the same thing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbf7f2; --card:#ffffff; --ink:#2f2a26; --muted:#7a716a; --line:#ece4da;
+    --sage:#7f9a83; --sage-d:#5e7a63; --blush:#e9c9bf; --claimed:#efe9e2; --warn:#b4553f;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  header{padding:44px 20px 18px;text-align:center}
+  .eyebrow{letter-spacing:.18em;text-transform:uppercase;font-size:12px;color:var(--sage-d);font-weight:700}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:clamp(30px,7vw,46px);margin:8px 0 10px;line-height:1.1}
+  .intro{max-width:560px;margin:0 auto;color:var(--muted);line-height:1.55;font-size:15.5px}
+  .progress{max-width:560px;margin:22px auto 0;font-size:14px;color:var(--muted)}
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar>span{display:block;height:100%;background:var(--sage);width:0;transition:width .5s}
+  .toolbar{position:sticky;top:0;z-index:5;background:rgba(251,247,242,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 14px;font:600 14px "Nunito Sans",sans-serif;color:var(--ink);cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  main{max-width:1100px;margin:0 auto;padding:18px 14px 60px}
+  .cat{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:22px;margin:26px 4px 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:opacity .3s}
+  .img{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line)}
+  .img img{width:100%;height:100%;object-fit:contain;padding:14px}
+  .img .ph{font-size:46px;opacity:.35}
+  .badge{position:absolute;top:12px;left:12px;background:var(--ink);color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:99px}
+  .badge.sale{background:var(--warn)}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .shop{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .name{font-weight:700;font-size:16px;line-height:1.3}
+  .desc{font-size:14px;color:var(--muted);line-height:1.45}
+  .price{font-size:18px;font-weight:700;margin-top:4px}
+  .price s{font-size:14px;color:var(--muted);font-weight:400;margin-left:6px}
+  .actions{display:flex;gap:8px;margin-top:auto;padding-top:10px}
+  .btn{flex:1;text-align:center;text-decoration:none;border-radius:12px;padding:11px 10px;font:700 14.5px "Nunito Sans",sans-serif;cursor:pointer;border:1px solid var(--ink);background:#fff;color:var(--ink)}
+  .btn.primary{background:var(--sage);border-color:var(--sage);color:#fff}
+  .btn.primary:hover{background:var(--sage-d)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .card.claimed{background:var(--claimed)}
+  .card.claimed .img img{opacity:.45;filter:grayscale(.6)}
+  .mine{font-size:13.5px;color:var(--sage-d);font-weight:700}
+  .linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font:600 13.5px "Nunito Sans",sans-serif;cursor:pointer;padding:0}
+  .empty{text-align:center;color:var(--muted);padding:50px 10px}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:0 20px 40px}
+  .modal{position:fixed;inset:0;background:rgba(47,42,38,.45);display:none;align-items:flex-end;justify-content:center;z-index:20;padding:14px}
+  .modal.open{display:flex}
+  .sheet{background:#fff;border-radius:22px;max-width:440px;width:100%;padding:24px 22px 20px}
+  .sheet h2{font-family:Fraunces,Georgia,serif;font-weight:600;margin:0 0 8px;font-size:22px}
+  .sheet p{color:var(--muted);line-height:1.5;margin:0 0 18px;font-size:15px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:14px;transition:transform .3s;z-index:30;max-width:90vw;text-align:center}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .admin-note{background:#fff3cd;border:1px solid #ecd88f;color:#6b5715;border-radius:12px;padding:10px 14px;font-size:14px;max-width:560px;margin:16px auto 0}
+  .per{font-size:13px;color:var(--muted);font-weight:600}
+  .need{font-size:13.5px;font-weight:700;padding:6px 10px;border-radius:10px;align-self:flex-start}
+  .need.open{background:#eef3ee;color:var(--sage-d)}
+  .need.done{background:#e6dfd6;color:var(--muted)}
+  @media (min-width:700px){.modal{align-items:center}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Baby on the way</div>
+  <h1>Our Baby Gift Registry</h1>
+  <p class="intro">Thank you for celebrating with us! Tap <strong>Go to shop</strong> to buy a gift, then come back and tap <strong>Claim</strong> so nobody else buys the same thing. Claims are anonymous: nobody can see who claimed what.</p>
+  <div class="progress" id="progress" hidden><span id="progressText"></span><div class="bar"><span id="progressBar"></span></div></div>
+  <div class="admin-note" id="adminNote" hidden>Admin view: you can reset any claim. Don't share this link.</div>
+</header>
+
+<nav class="toolbar" id="toolbar" aria-label="Filter gifts">
+  <button class="chip" data-filter="all" aria-pressed="true">All gifts</button>
+  <button class="chip" data-filter="needed" aria-pressed="false">Still needed</button>
+  <button class="chip" data-filter="mine" aria-pressed="false">My claims</button>
+</nav>
+
+<main id="main"><p class="empty" id="status">Loading gifts…</p></main>
+
+<footer>Prices are as listed by each shop and may change.</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="sheet">
+    <h2 id="mTitle">Claim this gift?</h2>
+    <p id="mText">Everyone will see it's taken, but not who claimed it. You can undo this later from this phone or computer.</p>
+    <div class="actions">
+      <button class="btn" id="mCancel">Cancel</button>
+      <button class="btn primary" id="mConfirm">Yes, claim it</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+/* ---- Config: public (publishable) key only; writes go through guarded database functions ---- */
+const SUPABASE_URL = "https://orsrdmpsyuhdysjcggqh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_18oqZ7EjjgfXVbZiMnSmag_mmLqLXmE";
+const DEMO = window.REGISTRY_DEMO || null; // used only by the mock-up preview
+
+const $ = (s, el=document) => el.querySelector(s);
+const state = { items: [], claims: new Map(), mine: new Map(), filter: "all" };
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+let token = store.get("registryToken", null);
+if (!token){ token = crypto.randomUUID() + crypto.randomUUID(); store.set("registryToken", token); }
+const adminSecret = new URLSearchParams(location.search).get("admin");
+let isAdmin = false;
+
+const rand = n => n == null ? "" : "R " + Number(n).toLocaleString("en-ZA", {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace(/,/g, " ").replace(/ /g, " ");
+const qty = it => Math.max(1, Number(it.quantity) || 1);
+const taken = it => state.claims.get(it.id) || 0;
+const left = it => Math.max(0, qty(it) - taken(it));
+const unit = (it, n) => { const u = it.unit_label || "item"; return n === 1 ? u : (u.startsWith("box") ? u.replace(/^box/, "boxes") : u + "s"); };
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2600); }
+
+/* ---- Data layer (Supabase, or in-memory for the mock-up) ---- */
+let api;
+if (DEMO){
+  const counts = new Map(Object.entries(DEMO.claims || {}));
+  const mine = new Map();
+  const qOf = id => Math.max(1, Number((DEMO.items.find(i => i.id === id) || {}).quantity) || 1);
+  api = {
+    async load(){ return { items: DEMO.items, claims: new Map(counts), mine: new Map(mine) }; },
+    async claim(id){ const c = counts.get(id) || 0; if (c >= qOf(id)) return false; counts.set(id, c+1); mine.set(id, (mine.get(id)||0)+1); return true; },
+    async unclaim(id){ const m = mine.get(id) || 0; if (!m) return false; mine.set(id, m-1); counts.set(id, (counts.get(id)||1)-1); return true; },
+    async reset(id){ counts.delete(id); mine.delete(id); return true; },
+    async isAdmin(){ return false; },
+    subscribe(){}
+  };
+} else {
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+  api = {
+    async load(){
+      const [i, c, m] = await Promise.all([
+        sb.from("items").select("*").order("category").order("sort").order("created_at"),
+        sb.from("item_claims").select("item_id"),
+        sb.rpc("my_claim_counts", { p_token: token })
+      ]);
+      if (i.error) throw i.error; if (c.error) throw c.error;
+      const claims = new Map(); for (const r of c.data) claims.set(r.item_id, (claims.get(r.item_id)||0) + 1);
+      const mine = new Map(); for (const r of (m.data || [])) mine.set(r.item_id, Number(r.n));
+      return { items: i.data, claims, mine };
+    },
+    async claim(id){ const { data, error } = await sb.rpc("claim_item", { p_item: id, p_token: token }); if (error) throw error; return data; },
+    async unclaim(id){ const { data, error } = await sb.rpc("unclaim_item", { p_item: id, p_token: token }); if (error) throw error; return data; },
+    async reset(id){ const { data, error } = await sb.rpc("admin_reset_claim", { p_item: id, p_secret: adminSecret }); if (error) throw error; return data; },
+    async isAdmin(){ if (!adminSecret) return false; const { data } = await sb.rpc("is_admin", { p_secret: adminSecret }); return !!data; },
+    subscribe(onChange){
+      sb.channel("registry")
+        .on("postgres_changes", { event: "*", schema: "public", table: "item_claims" }, onChange)
+        .on("postgres_changes", { event: "*", schema: "public", table: "items" }, onChange)
+        .subscribe();
+    }
+  };
+}
+
+async function refresh(){
+  const { items, claims, mine } = await api.load();
+  state.items = items; state.claims = claims; state.mine = mine;
+  render();
+}
+
+/* ---- Rendering ---- */
+function icon(it){
+  const c = (it.category || "").toLowerCase();
+  if (c.includes("bath")) return "🛁"; if (c.includes("sleep")) return "🛏️"; if (c.includes("feed")) return "🍼";
+  if (c.includes("nappy") || c.includes("diaper")) return "🧷"; if (c.includes("gear") || c.includes("travel")) return "👶";
+  return "🎁";
+}
+function render(){
+  const main = $("#main"); main.textContent = "";
+  const total = state.items.length, done = state.items.filter(i => left(i) === 0).length;
+  if (total){
+    $("#progress").hidden = false;
+    $("#progressText").textContent = `${done} of ${total} gifts fully claimed`;
+    $("#progressBar").style.width = (done/total*100) + "%";
+  }
+  let list = state.items;
+  if (state.filter === "needed") list = list.filter(i => left(i) > 0);
+  if (state.filter === "mine") list = list.filter(i => state.mine.get(i.id));
+  if (!list.length){
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = !total ? "Gifts are being added. Check back soon!"
+      : state.filter === "needed" ? "Every gift has been claimed. Thank you so much!"
+      : state.filter === "mine" ? "You haven't claimed anything from this phone or computer yet."
+      : "No gifts yet.";
+    main.append(p); return;
+  }
+  const groups = new Map();
+  for (const it of list){ const k = it.category || "Gifts"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+  for (const [cat, items] of groups){
+    const h = document.createElement("h2"); h.className = "cat"; h.textContent = cat; main.append(h);
+    const grid = document.createElement("div"); grid.className = "grid"; main.append(grid);
+    for (const it of items) grid.append(card(it));
+  }
+}
+
+function card(it){
+  const q = qty(it), t = taken(it), l = left(it), full = l === 0, mine = state.mine.get(it.id) || 0;
+  const el = document.createElement("article"); el.className = "card" + (full ? " claimed" : "");
+  const img = document.createElement("div"); img.className = "img";
+  const ph = () => { const s = document.createElement("span"); s.className = "ph"; s.textContent = icon(it); return s; };
+  if (it.image_url){ const im = document.createElement("img"); im.src = it.image_url; im.alt = it.name; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
+    im.onerror = () => { im.remove(); img.prepend(ph()); }; img.append(im); }
+  else img.append(ph());
+  const onSale = it.original_price && Number(it.original_price) > Number(it.price);
+  if (full){ const b = document.createElement("span"); b.className = "badge"; b.textContent = "Claimed"; img.append(b); }
+  else if (onSale){ const b = document.createElement("span"); b.className = "badge sale"; b.textContent = "On sale"; img.append(b); }
+  el.append(img);
+
+  const body = document.createElement("div"); body.className = "body";
+  const add = (cls, text) => { if (!text) return; const d = document.createElement("div"); d.className = cls; d.textContent = text; body.append(d); return d; };
+  add("shop", it.shop); add("name", it.name); add("desc", it.description);
+  if (it.price != null){
+    const p = add("price", rand(it.price));
+    if (q > 1){ const e = document.createElement("span"); e.className = "per"; e.textContent = " per " + unit(it, 1); p.append(e); }
+    if (onSale){ const s = document.createElement("s"); s.textContent = rand(it.original_price); p.append(s); }
+  }
+  if (q > 1){
+    const need = add("need", full ? `All ${q} ${unit(it, q)} claimed` : `Need ${q} ${unit(it, q)} · ${l} still needed`);
+    need.classList.add(full ? "done" : "open");
+  }
+
+  const actions = document.createElement("div"); actions.className = "actions";
+  if (it.url){ const a = document.createElement("a"); a.className = "btn"; a.href = it.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Go to shop"; actions.append(a); }
+  if (!full){
+    const b = document.createElement("button"); b.className = "btn primary"; b.textContent = q > 1 ? `Claim 1 ${unit(it, 1)}` : "Claim"; b.onclick = () => confirmClaim(it); actions.append(b);
+  }
+  body.append(actions);
+  if (mine){
+    const m = document.createElement("div"); m.className = "mine";
+    m.textContent = (q > 1 ? `You claimed ${mine} ${unit(it, mine)}` : "You claimed this") + " · ";
+    const u = document.createElement("button"); u.className = "linkbtn"; u.textContent = q > 1 ? "Undo 1" : "Undo"; u.onclick = () => doUnclaim(it); m.append(u); body.append(m);
+  }
+  if (t && isAdmin){
+    const r = document.createElement("button"); r.className = "linkbtn"; r.textContent = `Reset ${t} claim${t>1?"s":""} (admin)`; r.onclick = () => doReset(it); body.append(r);
+  }
+  el.append(body);
+  return el;
+}
+
+/* ---- Actions ---- */
+let pending = null;
+function confirmClaim(it){
+  pending = it;
+  const q = qty(it);
+  $("#mTitle").textContent = q > 1 ? `Claim 1 ${unit(it, 1)}?` : "Claim this gift?";
+  $("#mText").textContent = (q > 1 ? `Buying more than one? Claim once for each ${unit(it, 1)}. ` : "") + "Everyone will see it's taken, but not who claimed it. You can undo this later from this phone or computer.";
+  $("#modal").classList.add("open"); $("#mConfirm").focus();
+}
+function closeModal(){ $("#modal").classList.remove("open"); pending = null; }
+$("#mCancel").onclick = closeModal;
+$("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+$("#mConfirm").onclick = async () => {
+  const it = pending; if (!it) return; const btn = $("#mConfirm"); btn.disabled = true;
+  try{
+    const ok = await api.claim(it.id);
+    toast(ok ? "Claimed. Thank you! 💛" : "Someone has just claimed the last one.");
+    await refresh().catch(()=>render());
+  }catch(e){ toast("Couldn't save. Please check your connection and try again."); }
+  btn.disabled = false; closeModal();
+};
+async function doUnclaim(it){
+  try{ const ok = await api.unclaim(it.id); toast(ok ? "Claim removed." : "This claim was already removed."); await refresh().catch(()=>render()); }
+  catch{ toast("Couldn't save. Please try again."); }
+}
+async function doReset(it){
+  try{ const ok = await api.reset(it.id); toast(ok ? "Claims reset." : "Couldn't reset."); await refresh(); } catch{ toast("Couldn't reset. Please try again."); }
+}
+$("#toolbar").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  state.filter = b.dataset.filter;
+  for (const c of document.querySelectorAll(".chip")) c.setAttribute("aria-pressed", String(c === b));
+  render();
+};
+
+/* ---- Start ---- */
+(async () => {
+  try{
+    isAdmin = await api.isAdmin().catch(() => false);
+    $("#adminNote").hidden = !isAdmin;
+    await refresh();
+    let t; api.subscribe(() => { clearTimeout(t); t = setTimeout(() => refresh().catch(()=>{}), 250); });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh().catch(()=>{}); });
+    setInterval(() => { if (!document.hidden) refresh().catch(()=>{}); }, 30000);
+  }catch(e){
+    $("#status").textContent = "We couldn't load the registry. Please refresh the page.";
+  }
+})();
+</script>
+</body>
+</html>
